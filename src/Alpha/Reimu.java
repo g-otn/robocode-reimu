@@ -21,9 +21,7 @@ public class Reimu extends AdvancedRobot {
   double d = 150.0;
   double dir = 1;
   // Condições de execução de movimento
-  boolean desviando = false;
   boolean saindoDaParede = false;
-  
   
   /*
     Variáveis para armazenamento de informações sobre o alvo
@@ -37,10 +35,10 @@ public class Reimu extends AdvancedRobot {
   */
   // Variáveis de controle de escolha de alvo
   boolean escolhendoAlvo = false;
+  String tiroAnterior = "";
   // Variáveis de armazenamento de informações sobre outros robôs
   String outros[];
   double disOutros[];
-  
   
   /*
     Inicia o robô, colocando configurações iniciais e escolhendo o primeiro alvo
@@ -50,19 +48,10 @@ public class Reimu extends AdvancedRobot {
     setAdjustGunForRobotTurn(true);
     setAdjustRadarForRobotTurn(true);
     setAdjustRadarForGunTurn(true);
-    setTurnRadarRight(Double.POSITIVE_INFINITY); // Procura por alvos
+    prepararParaEscolherAlvo(); // Procura por alvos
     do {
       // Nunca para de andar
-      setAhead((distAlvo / 4 + 25) * dir);
-      
-
-      /*
-        Atualização de status
-      */
-      // Marca como não desviando se já acabou o movimento de desvio
-      if (desviando && getTurnRemaining() == 0) {
-        desviando = false;
-      }
+      setAhead((distAlvo / 4 + 25) * dir);      
 
       /* 
         Distanciamento da parede
@@ -79,102 +68,110 @@ public class Reimu extends AdvancedRobot {
     } while (true);
   }
   
-  
   /*
     É chamada quando algum robô entra no arco do radar
   */
   public void onScannedRobot(ScannedRobotEvent e) {
-    
     /*
-      Ajuste de inclinação
+      Escolha de alvo
     */
-    // Arruma o ângulo do corpo do robô se não estiver ou batendo na parede
-    if (!vaiBater(0.6)) {
-      setTurnRight(e.getBearing() + 90 - 30*dir);
+    if (getOthers() == 1) {
+      // Escolhe como alvo já que é o único possível
+      alvo = e.getName(); 
+    } else { // Se houver mais de 1 inimigo sobrando
+      // Guarda informações do robô para ser analizado depois (em escolherAlvo())
+      if (escolhendoAlvo) {
+        for (int i = 0; i < outros.length; i++) {
+          if (outros[i].equals(e.getName())) {
+            return; // Impede de guardar informações do mesmo robô mais de uma vez
+          } else if (outros[i].equals("")) { // Se achou um espaço não preenchido do vetor (ainda não analizou todos)
+            // Guardar informações
+            outros[i] = e.getName();
+            disOutros[i] = e.getDistance();
+            out.println("Encontrado " + outros[i] + " Dist: " + Math.round(disOutros[i]*10)/10 + ")");
+            if (i == outros.length-1) { // Se todos os robôs já foram escaneados
+              out.println("Todos robôs analizados, escolhendo alvo");
+              escolherAlvo(); // Analizar informações e escolher o alvo
+            }
+            i = outros.length; // Após guardar informações do robô, parar de tentar alocar
+          }
+        }
+        return;
+      } else {
+        // Trocar de alvo caso esteja não tão longe comparado ao alvo e com menos vida que o alvo atual
+        if (!e.getName().equals(alvo) && e.getEnergy() < vidaAlvo && e.getDistance() <= distAlvo) {
+          out.println("Novo alvo por dist (" + Math.round(e.getDistance()*10.0)/10.0 + "<" + Math.round(distAlvo*10.0)/10.0 + ") e vida: " + e.getName() + " (" + Math.round(e.getEnergy()*10.0)/10.0 + "<" + Math.round(vidaAlvo*10.0)/10.0 + ")");
+          alvo = e.getName();
+        }
+      }
     }
     
+    if (!e.getName().equals(alvo)) return;
     
-    /*
-      Realizador de manobras de desvio
-    */
-    // Só desvia se o alvo atirou: Se perdeu energia que é perdida por tiro (de 0.1 até 3, sem ser o dano de colisão (0.6));
-    // Ou se já não está no começo de um desvio (para não ficar mudando de direção muito rápido, o que faz ficar parado)
     if (!saindoDaParede &&
         vidaAlvo - e.getEnergy() >= Rules.MIN_BULLET_POWER && // Entre 0.1
         vidaAlvo - e.getEnergy() <= Rules.MAX_BULLET_POWER && // e 3
         !(vidaAlvo - e.getEnergy() > 0.57 && vidaAlvo - e.getEnergy() < 0.63) // dano causado por Ram
         ) {
-      out.println("Alvo perdeu energia " + Math.round(vidaAlvo * 10) / 10.0 + "->" + Math.round(e.getEnergy() * 10) / 10.0 + " (" + (vidaAlvo - e.getEnergy()) + "), pode ter atirado! Trocando de direção");
-      desviando = true;
+      //out.println("Alvo perdeu energia " + Math.round(vidaAlvo * 10) / 10.0 + "->" + Math.round(e.getEnergy() * 10) / 10.0 + " (" + Math.round((vidaAlvo - e.getEnergy()) * 10) / 10.0 + "), pode ter atirado! Trocando de direção");
       dir *= -1;
     }
     
+    // Troca de direção baseado na distância, para chegar perto do inimigo
+    if (!vaiBater(0.6)) {
+      if (e.getDistance() > getHeight()*3) {
+        setTurnRight(e.getBearing() + 90 - 40*dir);
+      } else {
+        setTurnRight(e.getBearing() + 90 - 10*dir);
+      }
+    }
     
-    // Pega o ângulo necessário para alinhar o corpo, arma ou radar no inimigo
-    // Usando o getHeading(), já que o e.getBearing() é relativo a ele,
-    // a partir do absBearing, você subtrai com o que será alinhado
+    // Ângulo de 0 até onde o alvo está
     double absBearing = e.getBearing() + getHeading();
-
     
-    /*
-      Ajustar radar
-    */
-    setTurnRadarRight(normalRelativeAngleDegrees((absBearing - getRadarHeading())*2));
-
+    // Ajustar radar
+    setTurnRadarRight(ajustarRadar(absBearing));
     
-    /*
-      Ajustar arma
-    */
+    // Mirar
     setTurnGunRightRadians(ajustarArma(e)*0.85);
     
-    
-    /*
-      Atirar
-    */
+    // Atirar
     setFire(calcularPoderTiro(e.getDistance()));
     
-    
-    
-    /*
-      Guarda informação sobre o alvo (para outros eventos)
-    */
+    // Atualização de informações sobre o alvo
     vidaAlvo = e.getEnergy();
     distAlvo = e.getDistance();
   }
   
-  
-  /*
-    É chamada quando for atingido por uma bala
-  */
   public void onHitByBullet(HitByBulletEvent e) {
-    dir *= -1;
-    setTurnRight(e.getBearing() + 90 - 30*dir);
-    
-    if (!e.getName().equals(alvo)) {
-      out.println("Novo alvo por ser atingindo! " + e.getName());
-      alvo = e.getName();
-      escolhendoAlvo = false;
-      // Procura o novo alvo
-      double radarBearing = normalRelativeAngleDegrees((e.getBearing() + getHeading()) - getRadarHeading());
-      // Gira o radar na direção que o encontrará mais rápido
-      if (radarBearing > 0) {
-        setTurnRadarRight(Double.POSITIVE_INFINITY);
-      } else {
-        setTurnRadarRight(Double.NEGATIVE_INFINITY);
+    if (getOthers() > 1) {   
+      // Troca de alvo
+      if ((distAlvo > d || e.getName().equals(tiroAnterior)) && vidaAlvo > 18) {
+        out.println("Novo alvo por ser atingindo! " + e.getName());
+        alvo = e.getName();
+        // Procura o novo alvo
+        double radarBearing = normalRelativeAngleDegrees((e.getBearing() + getHeading()) - getRadarHeading());
+        // Gira o radar na direção que o encontrará mais rápido
+        if (radarBearing > 0) {
+          setTurnRadarRight(Double.POSITIVE_INFINITY);
+        } else {
+          setTurnRadarRight(Double.NEGATIVE_INFINITY);
+        }
+      }
+      
+      if (!e.getName().equals(alvo)) {
+        tiroAnterior = e.getName();
       }
     }
   }
   
-  
-  /*
-    É chamada quando bater em um robô
-  */
   public void onHitRobot(HitRobotEvent e) {
-    dir *= -1;
-    setTurnRight(e.getBearing() + 90 - 30*dir);
-    if (!e.getName().equals(alvo)) {
-      out.println("Novo alvo por colisão! " + e.getName());
-      escolhendoAlvo = false;
+    dir *= -1;    
+    
+    // Troca de alvo caso o robô que bateu esteja com menos vida
+    if (!escolhendoAlvo && !e.getName().equals(alvo) && e.getEnergy() < vidaAlvo) {
+      out.println("Novo alvo por menor vida! " + e.getName() + " (" + Math.round(e.getEnergy()*10.0)/10.0 + "<" + Math.round(vidaAlvo*10.0)/10.0 + ")");
+      alvo = e.getName();
       // Procura o novo alvo
       double radarBearing = normalRelativeAngleDegrees((e.getBearing() + getHeading()) - getRadarHeading());
       // Gira o radar na direção que o encontrará mais rápido
@@ -186,10 +183,6 @@ public class Reimu extends AdvancedRobot {
     }
   }
   
-  
-  /*
-    É chamada quando bater na parede
-  */
   public void onHitWall(HitWallEvent e) {
     saindoDaParede = true; // Impede de desviar perto da parede (evita movimentos errados e ficar preso)
     
@@ -205,24 +198,101 @@ public class Reimu extends AdvancedRobot {
     } else {
       // Se estiver de lado para a parede
       if (dir == 1) {
-        setTurnRight(normalRelativeAngleDegrees(e.getBearing()+10));
+        setTurnRight(normalRelativeAngleDegrees(e.getBearing()));
         dir = -1;
       } else {
-        setTurnRight(normalRelativeAngleDegrees(e.getBearing()+170));
+        setTurnRight(normalRelativeAngleDegrees(e.getBearing()+180));
         dir = 1;
       }
     }
   }
   
-  
-  /*
-    É chamada quando algum robô morrer
-  */
   public void onRobotDeath(RobotDeathEvent e) {
     // Busca por outro alvo caso o atual morra
-    setTurnRadarRight(Double.POSITIVE_INFINITY);
+    if (e.getName().equals(alvo)) {
+      // Se houver mais de um inimigo sobrando, analisá-los para escolher
+      if (getOthers() > 1) {
+        out.println("Alvo morreu! Procurando novo inimigo (" + getOthers() + ")");
+        prepararParaEscolherAlvo();
+      } else {
+        out.println("Alvo morreu! Procurando último inimigo (" + getOthers() + ")");
+        setTurnRadarRight(Double.POSITIVE_INFINITY);
+      }
+    } else if (escolhendoAlvo) {
+      prepararParaEscolherAlvo();
+    }
   }
   
+  /*
+    Prepara o robô para procurar robôs
+  */
+  void prepararParaEscolherAlvo() {
+    // Reseta e limpa as variáveis que guardarão as informações
+    outros = new String[getOthers()];
+    disOutros = new double[getOthers()];
+    for (int i = 0; i < outros.length; i++) {
+      outros[i] = "";
+    }
+    escolhendoAlvo = true; // Permite guardar informação dos robos escaneados
+    setTurnRadarRight(Double.POSITIVE_INFINITY); // Procura pelos robôs    
+  }
+
+  /*
+    Analiza dados sobre os robôs e escolhe o alvo
+  */
+  void escolherAlvo() {
+    // Para de escanear por novos alvos (já que já escaneou todos)
+    escolhendoAlvo = false;
+    
+    // Escolha de alvo
+    int roboEscolhido = -1;
+    // Decisão baseada em distância
+    double menorDis = Double.MAX_VALUE;
+    for (int i = 0; i < outros.length; i++) {
+      // Como é a primeira vez, todos os robôs estarão com a mesma vida, então serve como critério de escolha
+      if (disOutros[i] < menorDis) {
+        roboEscolhido = i;
+        menorDis = disOutros[i];
+      }
+    }
+    out.println("Novo alvo: " + outros[roboEscolhido] + " (Distância: " + Math.round(disOutros[roboEscolhido]*10.0)/10.0 + ")");
+    alvo = outros[roboEscolhido];
+  }
+  
+  /*
+    Ajusta o radar para sempre estar escaneando o alvo
+  */
+  double ajustarRadar(double absBearing) {
+    if (getOthers() > 1) {
+      /*
+        Radar com arco máximo: Abre o máximo possível (45°)
+      */
+      // Mira no inimigo abrindo o maior arco possível por turno (22.5° para cada lado)
+      double correcaoRadar;
+      correcaoRadar = normalRelativeAngleDegrees((absBearing - getRadarHeading()));
+      correcaoRadar += 22.5*Math.signum(correcaoRadar);
+      
+      // Impede do arco ser maior que 45° ou muito pequeno (chance de escapar do radar)
+      if (correcaoRadar > 45.0) {
+        correcaoRadar = 45.0;
+      } else if (correcaoRadar < -45.0) {
+        correcaoRadar = -45.0;
+      } else if (correcaoRadar > 0.0 && correcaoRadar < 20.0) {
+        correcaoRadar = 20.0;
+      } else if (correcaoRadar > -20.0 && correcaoRadar <= 0.0) {
+        correcaoRadar = -20.0;
+      }
+      
+      return correcaoRadar;
+    } else {
+      /*
+        Radar focado: Segue o alvo com o ângulo que o encontrou (*2)
+      */
+      // Pega o que o radar precisa girar para alinhar e multiplica por 2,
+      // pois multiplicado por 2 o radar não mira no robô e sim cobre ele com o arco criado
+      return normalRelativeAngleDegrees((absBearing - getRadarHeading())*2);
+    }
+  }
   
   /*
     Ajusta a arma no inimigo compensando sua velocidade
@@ -237,10 +307,10 @@ public class Reimu extends AdvancedRobot {
       // Modificação de compensação linear (para não perder muito tempo virando a arma se estiver perto)
       if (e.getDistance() <= 12*10) {
         // Se estiver perto
-        compensacaoLinear *= 0.6;
+        compensacaoLinear *= 0.5;
       } else if (e.getDistance() <= 12*5) {
         // Se estiver muito perto
-        compensacaoLinear *= 0.4;
+        compensacaoLinear *= 0.3;
       }
       
       return normalRelativeAngle(absBearingRad - getGunHeadingRadians() + compensacaoLinear);
@@ -251,13 +321,30 @@ public class Reimu extends AdvancedRobot {
     }
   }
   
-  
   /*
     Calcula a potência do tiro baseado na distância do alvo e na própria vida
   */
   double calcularPoderTiro(double dAlvo) {
     if (vidaAlvo != 0.0) {
-      return Math.max(getBattleFieldHeight(), getBattleFieldWidth()) / dAlvo;
+      if (dAlvo < getHeight()*1.5) {
+        // Se estiver perto o suficiente "para não errar"
+        return Rules.MAX_BULLET_POWER;
+      } else if (getEnergy() > 4*Rules.MAX_BULLET_POWER + 2*(Rules.MAX_BULLET_POWER - 1)
+              || (getOthers() == 1 && getEnergy() > 3*Rules.MAX_BULLET_POWER)) {
+        // Se estiver com vida suficiente para atirar forte
+        if (dAlvo <= d*2) {
+          // Perto
+          return Rules.MAX_BULLET_POWER;
+        } else {
+          // Longe
+          return Math.min(1.1 + (d*2) / dAlvo, Rules.MAX_BULLET_POWER); // Quanto mais longe, menor o poder de tiro
+        }
+      } else if (getEnergy() > 2.2) {
+        // Se estiver com a vida baixa
+        return 1.1; // Quanto mais longe, menor o poder de tiro
+      } else {
+        return Math.max(0.1, getEnergy()/3);
+      }
     } else {
       return 0.1;
     }
