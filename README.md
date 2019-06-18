@@ -13,8 +13,8 @@ The name "Reimu" is a reference of the main character of the Touhou Project game
 While doing a spiral-like movement towards the target, it monitors the target's energy to check if it shot. 
 If a shot is detected, it changes the rotation direction. This dodges most robots with Head-On and Linear targeting.
 
-Enquanto faz um movimento em espiral em direção ao alvo, ele monitora a energia para checar se o alvo atirou.
-Se um tiro foi detectado, ele troca o sentido de rotação. Isso desvia da maioria dos robôs que alvejam com Head-On ou Linear.
+*Enquanto faz um movimento em espiral em direção ao alvo, ele monitora a energia para checar se o alvo atirou.
+Se um tiro foi detectado, ele troca o sentido de rotação. Isso desvia da maioria dos robôs que alvejam com Head-On ou Linear.*
 
 ## Other Features (*Outras Características*)
 - One on One Radar
