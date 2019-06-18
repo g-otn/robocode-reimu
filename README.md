@@ -16,12 +16,16 @@ If a shot is detected, it changes the rotation direction. This dodges most robot
 *Enquanto faz um movimento em espiral em direção ao alvo, ele monitora a energia para checar se o alvo atirou.
 Se um tiro foi detectado, ele troca o sentido de rotação. Isso desvia da maioria dos robôs que alvejam com Head-On ou Linear.*
 
+<p align="center">
+  <img src="https://user-images.githubusercontent.com/44736064/59645892-a4ccbf80-914a-11e9-902a-5db055b0a4b3.gif">
+</p>
+
 ## Other Features (*Outras Características*)
 - One on One Radar
 - Linear Targeting (slightly modified for small turns for small distances)
 - Target change based on being hit, bullet hit, distance and health
 - Bullet power change based on distance and own health
-- Wall anti-collision
+- Wall anti-collision (broken)
 
 <br>
 
@@ -29,7 +33,16 @@ Se um tiro foi detectado, ele troca o sentido de rotação. Isso desvia da maior
 - *Linear targeting (levemente modificado para pequenas voltas para pequenas distâncias)*
 - *Troca de alvo baseado em ser atingido, acerto de projétil, distância e vida*
 - *Troca de potência de projétil baseado em distância e na própria vida*
-- *Anticolisão com a parede*
+- *Anticolisão com a parede (quebrado)*
+
+
+<p align="center">
+  <img src="https://user-images.githubusercontent.com/44736064/59646847-11e25400-914f-11e9-82ce-d75b3dc52f4d.gif">
+</p>
+
+Demo of Reimu changing targets by choosing lowest health when acidentally ramming and when shot.
+
+*Demonstração da Reimu trocando de alvo selecionando a menor vida ao acidentalmente "esbarrar" e quando atingida.*
 
 ## Download .jar
 See [Releases](https://github.com/g-otn/robocode-reimu/releases). *Veja [Releases](https://github.com/g-otn/robocode-reimu/releases).*
