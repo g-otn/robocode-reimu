@@ -5,9 +5,9 @@ It was created by the "Alpha" team for the [6th Robotica Paula Souza's Robocode 
 *Um simples Robocode MegaBot AdvancedRobot para meelee e 1v1. 
 Foi criado pelo o time "Alpha" para o [6º campeonato de Robocode do Robotica Paula Souza](http://www.robotica.cpscetec.com.br/robocode.php) (2018) e terminou em 2º lugar.*
 
-The name "Reimu" is a reference of the main character of the Touhou Project game series Reimu, which dodges bullets in the game.
+The name "Reimu" is a reference of the main character of the Touhou Project game series Reimu, who dodges bullets in the game.
 
-*O nome "Reimu" é uma referência a personagem principal Reimu, da série de jogos Touhou Project, a qual desvia de projéteis no jogo.*
+*O nome "Reimu" é uma referência a personagem principal Reimu, da série de jogos Touhou Project, que se esquiva de projéteis no jogo.*
 
 ## Main strategy
 While doing a spiral-like movement towards the target, it monitors the target's energy to check if it shot. 
