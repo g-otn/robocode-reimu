@@ -1,6 +1,8 @@
 # robocode-reimu
 A simple Robocode MegaBot AdvancedRobot for meelee and 1v1. 
+
 It was created by the "Alpha" team for the [6th Robotica Paula Souza's Robocode championship](http://www.robotica.cpscetec.com.br/robocode.php) (2018) and finished in 2nd place.
+[Check out its battles](https://goo.gl/bB79ZQ) (look for the videos with "Fatec108" on the title).
 
 The name "Reimu" is a reference of the main character of the Touhou Project game series Reimu, who dodges bullets in the game.
 
@@ -14,7 +16,7 @@ If a shot is detected, it changes the rotation direction. This dodges most robot
   <img src="https://user-images.githubusercontent.com/44736064/59645892-a4ccbf80-914a-11e9-902a-5db055b0a4b3.gif">
 </p>
 
-## Other Features (*Outras Características*)
+## Other Features
 - One on One Radar
 - Linear Targeting (slightly modified for small turns for small distances)
 - Target change based on being hit, bullet hit, distance and health
