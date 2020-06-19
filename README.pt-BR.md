@@ -1,7 +1,7 @@
 # robocode-reimu
 Um simples Robocode MegaBot AdvancedRobot para meelee e 1v1. 
 
-Foi criado pelo o time "Alpha" para o [6º campeonato de Robocode do Robotica Paula Souza](http://www.robotica.cpscetec.com.br/robocode.php) (2018) e terminou em 2º lugar.
+Foi criado pelo o time "Alpha" para o [6º campeonato de Robocode do Robotica Paula Souza](http://www.robotica.cpscetec.com.br/eventos.php?pag=2018) (2018, clique em "6º Robocode") e terminou em 2º lugar.
 [Confira suas batalhas](https://goo.gl/bB79ZQ) (procure os vídeos com "Fatec108" no título).
 
 O nome "Reimu" é uma referência a personagem principal Reimu, da série de jogos Touhou Project, que se esquiva de projéteis no jogo.
